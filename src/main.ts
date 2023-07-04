@@ -6,9 +6,11 @@ import {
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from './database/prisma/prisma.service';
+import { LoggerInterceptor, logger } from './logger';
+import { ExceptionFilter } from './errors';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger });
 
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
@@ -27,6 +29,8 @@ async function bootstrap() {
       },
     }),
   );
+  app.useGlobalInterceptors(new LoggerInterceptor());
+  app.useGlobalFilters(new ExceptionFilter());
 
   await app.listen(3333);
 }

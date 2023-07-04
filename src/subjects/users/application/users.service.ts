@@ -5,7 +5,7 @@ import { PrismaService } from 'src/database';
 export class UsersService {
   constructor(private readonly _prisma: PrismaService) {}
 
-  async findMe(id: number) {
+  async findUser(id: number) {
     const user = await this._prisma.user.findUnique({ where: { id } });
     return this._prisma.exclude(user, ['password']);
   }
