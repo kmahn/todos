@@ -18,6 +18,7 @@ export class ExceptionFilter implements NestExceptionFilter {
     const { message } = request.authInfo || {};
     const error = exception;
 
+    // jwt 관련 메시지
     if (message === 'jwt expired') {
       exception = new UnauthorizedException(ErrorMessage.ACCESS_TOKEN_EXPIRED);
     } else if (message === 'No auth token') {

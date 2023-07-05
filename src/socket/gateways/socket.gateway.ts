@@ -3,6 +3,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  SubscribeMessage,
   WebSocketGateway,
   WsException,
 } from '@nestjs/websockets';
@@ -22,6 +23,10 @@ export class SocketGateway
     private readonly _tokenService: BearerTokenService,
     private readonly _prisma: PrismaService,
   ) {}
+
+  emit(event: string, payload: any) {
+    this.server.emit(event, payload);
+  }
 
   emitToUser(event: string, payload: any, userId: number) {
     const nsp: Namespace = this.server.of('/');
@@ -47,6 +52,7 @@ export class SocketGateway
   }
 
   handleConnection(socket: Socket) {
+    socket.join('chat_room');
     Logger.debug(`${socket.id} 소켓 연결`);
   }
 
@@ -64,17 +70,16 @@ export class SocketGateway
         const { id } = this._tokenService.verify(token);
         const user = await this._prisma.user.findUnique({ where: { id } });
         if (!user) return next(new WsException(ErrorMessage.USER_NOT_FOUND));
-
         (client as any).user = user;
         next();
       } catch (e) {
         Logger.error(e.message);
-        return next(new WsException(e.message));
+        next(new WsException(e.message));
       }
     });
 
-    server.on('create-room', (room) =>
-      Logger.debug(`"Room ${room}"이 생성되었습니다.`),
+    server.on('create-room', (room, id) =>
+      Logger.debug(`"Room ${id}가 ${room}"을 생성했습니다.`),
     );
     server.on('join-room', (room, id) =>
       Logger.debug(`"Socket ${id}"가 "Room ${room}에 참여하였습니다.`),
